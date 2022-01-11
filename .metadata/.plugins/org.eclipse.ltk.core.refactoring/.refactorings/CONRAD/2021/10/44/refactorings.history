@@ -1,0 +1,4 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<session version="1.0">
+<refactoring comment="Copy element &apos;&apos; to &apos;edu.stanford.rsl.tutorial.mipda.Intro.vRand&apos;&#x0D;&#x0A;- Original project: &apos;CONRAD&apos;&#x0D;&#x0A;- Destination element: &apos;edu.stanford.rsl.tutorial.mipda.Intro.vRand&apos;&#x0D;&#x0A;- Original element: &apos;edu.stanford.rsl.tutorial.mipda.Intro.v1&apos;" description="Copy field" destination="/src&lt;edu.stanford.rsl.tutorial.mipda{Intro.java[Intro^vRand" element1="/src&lt;edu.stanford.rsl.tutorial.mipda{Intro.java[Intro^v1" flags="589830" id="org.eclipse.jdt.ui.copy" members="1" policy="org.eclipse.jdt.ui.copyMembers" stamp="1635635856679" version="1.0"/>
+</session>
