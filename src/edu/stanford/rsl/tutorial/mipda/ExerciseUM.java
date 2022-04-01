@@ -58,7 +58,7 @@ public class ExerciseUM {
 		/**
 		 * implement homomorphic unsharp masking 
 		 */
-		int kernelSize = 31;
+		int kernelSize = 255;
 		
 		exObject.correctedHUM = exObject.homomorphicFiltering(biased,kernelSize); // TODO: Go to this method and complete it!
 		exObject.correctedHUM.show("Corrected image using homomorphic unsharp masking");		
@@ -95,12 +95,12 @@ public class ExerciseUM {
 		
 		Grid2D corrected = (Grid2D) grid.clone();
 		
-		Grid2D mu_ij = null; //TODO: clone grid
+		Grid2D mu_ij = (Grid2D) grid.clone(); //TODO: clone grid
 		
 		MeanFilteringTool localMeanFilter = new MeanFilteringTool();
 		try {
-			//TODO // use configure() to configure localMeanFilter
-			//TODO // use the filter and applyToolToImage() such that mu_ij contains the result image of grid being average-filtered 
+			localMeanFilter.configure(kernelSize,kernelSize); // use configure() to configure localMeanFilter
+			localMeanFilter.applyToolToImage(mu_ij);// use the filter and applyToolToImage() such that mu_ij contains the result image of grid being average-filtered 
 		} catch (Exception e) {
 			e.printStackTrace();
 		}
@@ -122,10 +122,11 @@ public class ExerciseUM {
 					tempVal = eps;
 				}
 				else{
-					tempVal = 0; // TODO
+					tempVal = mu / mu_ij.getAtIndex(j,i); // TODO
 				}
 				
 				 // TODO: apply the bias field correction for the multiplicative model
+				corrected.setAtIndex(j, i, (grid.getAtIndex(j, i) * tempVal));
 			}
 		}
 		
@@ -139,7 +140,9 @@ public class ExerciseUM {
 
 		// transform into Fourier domain		
 		// TODO: Fourier Forward Transform
+		fftimage.transformForward();
 		// TODO: Shift origin point to the center
+		fftimage.fftshift();
 
 		for (int k = 0; k < fftimage.getHeight(); k++){
 			for (int l = 0; l < fftimage.getWidth(); l++){	
@@ -148,15 +151,19 @@ public class ExerciseUM {
 				double fl = (l-fftimage.getWidth()/2.0d)/fftimage.getHeight()/grid.getSpacing()[1];
 				
 				/* Apply the reverse Gaussian filter from the lecture */
-				float val =  0;  // TODO
+				float gauss_filter =  (float)(1.f - beta * Math.exp(-(fk * fk + fl * fl)/(2 * sigma * sigma)));  // TODO
 				// TODO: setRealAtIndex for fftimage
+				fftimage.setRealAtIndex(l, k, gauss_filter * fftimage.getRealAtIndex(l, k));
 				// TODO: setImageAtIndex for fftimage
+				fftimage.setImagAtIndex(l, k, gauss_filter * fftimage.getImagAtIndex(l, k));
 			}
 		}
 
 		// transform back into spatial domain
 		// TODO: inverse shift origin for fftimage
+		fftimage.ifftshift();
 		// TODO: inverse Fourier Transform for fftimage
+		fftimage.transformInverse();
 			
 		for (int i = 0; i < corrected.getHeight(); i++){
 			for (int j = 0; j < corrected.getWidth(); j++){
@@ -169,7 +176,7 @@ public class ExerciseUM {
 	public Grid2D frequencyCutoff(Grid2D grid,double cutoff) {
 		
 		Grid2D returnGrid = new Grid2D(grid); // TODO: apply a hard frequency cut-off (high pass filter), ...
-		returnGrid = null; // ... look for the appropriate class method in this file
+		returnGrid = highPass(grid,cutoff); // ... look for the appropriate class method in this file
 		
 		return returnGrid;
 	}

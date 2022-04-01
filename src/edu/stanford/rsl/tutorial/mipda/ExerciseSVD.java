@@ -8,6 +8,7 @@ import edu.stanford.rsl.conrad.numerics.DecompositionSVD;
 import edu.stanford.rsl.conrad.numerics.SimpleMatrix;
 import edu.stanford.rsl.conrad.numerics.SimpleMatrix.InversionType;
 import edu.stanford.rsl.conrad.numerics.SimpleMatrix.MatrixNormType;
+import edu.stanford.rsl.conrad.numerics.SimpleVector.VectorNormType;
 import edu.stanford.rsl.conrad.numerics.SimpleOperators;
 import edu.stanford.rsl.conrad.numerics.SimpleVector;
 import edu.stanford.rsl.conrad.utils.ImageUtil;
@@ -52,7 +53,7 @@ public class ExerciseSVD {
 			String filename = imageDataLoc + "mr_head_angio.jpg";
 			Grid2D image = ImageUtil.wrapImagePlus(IJ.openImage(filename)).getSubGrid(0);
 			image.show("mr_head_angio:original");
-			int rank = 150;	
+			int rank = 300;	
 			
 			//Data for problem 4
 			double[] xCoords = new double[]{-3.f, -2.f, -1.f, 0.f, 1.5f, 2.f, 3.1f, 5.9f, 7.3f};
@@ -62,6 +63,8 @@ public class ExerciseSVD {
 			
 			//create the svd of A
 			DecompositionSVD svd = exsvd.createSVD(A); //There are TODO-s here!
+			SimpleMatrix S = svd.getS();
+			System.out.println(" S = " + S);
 			
 			//compute the pseudo inverse of A
 			exsvd.pseudoInverse(A);
@@ -110,7 +113,7 @@ public class ExerciseSVD {
 			System.out.println("A = " + A.toString());
 			
 			//Compute the SVD of A				
-			DecompositionSVD svd = null; //TODO
+			DecompositionSVD svd = new DecompositionSVD(A, true,true,true); //TODO
 			
 			//Check output: re-compute A = U * S * V^T
 			if (svd != null) {
@@ -123,7 +126,11 @@ public class ExerciseSVD {
 		}
 		
 		public int minDim(SimpleMatrix A) {
-			return 0; //TODO
+			
+			int m = A.getRows();
+			int n = A.getCols();
+			int minDim = Math.min(m, n);
+			return minDim; //TODO
 		}
 		
 		public SimpleMatrix lowRankMatrix(SimpleMatrix A, int minDim){
@@ -141,9 +148,10 @@ public class ExerciseSVD {
 					Slowrank.setElementValue(i, i, val);
 				}
 			}
+			System.out.println("Introducing rank deff to S = " + Slowrank.toString());
 				
 			SimpleMatrix templowrank = SimpleOperators.multiplyMatrixProd(svd.getU(), Slowrank);
-			SimpleMatrix Alowrank = null; //TODO
+			SimpleMatrix Alowrank = SimpleOperators.multiplyMatrixProd(templowrank, svd.getV().transposed()); //TODO
 			if (Alowrank != null) {
 				System.out.println("A rank deficient = " + Alowrank.toString());
 			}
@@ -171,18 +179,19 @@ public class ExerciseSVD {
 			//SimpleVector xn = SimpleOperators.multiply(Ainv, bn);
 			
 			// compute and show percentual change
-			SimpleVector xPercentage = null; //TODO
+			SimpleVector xPercentage = SimpleOperators.divideElementWise(xn, x); //TODO
 			//TODO
+			System.out.println("percentage change = " + xPercentage);			
 			return xPercentage;
 			
 		}
 		
 		public SimpleVector vecDiff(SimpleVector x1, SimpleVector x2) {
-			return null; //TODO
+			return SimpleOperators.subtract(x1, x2); //TODO
 		}
 		
 		public int newRank(int oldRank, int rankDeficiency) {
-			return 0; //TODO
+			return oldRank - rankDeficiency; //TODO
 		}
 		
 		public SimpleMatrix optimizationProblem1(SimpleMatrix A, int svdNewRank)
@@ -231,8 +240,8 @@ public class ExerciseSVD {
 			}
 			
 			//compute A0
-			SimpleMatrix tempA0 = null; //TODO
-			SimpleMatrix A0 = null; //TODO
+			SimpleMatrix tempA0 = SimpleOperators.multiplyMatrixProd(svd.getU(), Slowrank); //TODO
+			SimpleMatrix A0 = SimpleOperators.multiplyMatrixProd(tempA0, svd.getV().transposed()); //TODO
 			
 			if (A0 != null) {
 				System.out.println("A0 = " + A0.toString());
@@ -273,6 +282,7 @@ public class ExerciseSVD {
 			}		
 			
 			DecompositionSVD svd = new DecompositionSVD(I);
+			System.out.println("Rank of original image " + svd.rank());
 			
 			Grid3D imageRanks = new Grid3D(image.getWidth(), image.getHeight(), rank);
 		
@@ -334,7 +344,7 @@ public class ExerciseSVD {
 		
 		public float calculateRMSE(Grid2D image1, Grid2D image2) {
 			NumericGridOperator op = new NumericGridOperator();
-			float rmse = 0; //TODO
+			float rmse = op.rmse(image1, image2); //TODO
 			return rmse;
 		}
 		
@@ -360,8 +370,8 @@ public class ExerciseSVD {
 			
 			for(int i = 0; i < xCoords.length; i++)//TODO
 			{
-				aCol.setElementValue(i, 0);//TODO
-				y.setElementValue(i, 0);//TODO
+				aCol.setElementValue(i, xCoords[i]);//TODO
+				y.setElementValue(i, yCoords[i]);//TODO
 			}
 			
 			A4.setColValue(0, aCol);

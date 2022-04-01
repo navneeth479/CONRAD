@@ -70,12 +70,13 @@ public class ExerciseREG {
 		double t2 = x.getElement(3);
 		
 		//calculate the absolute value of r = r1+i*r2
-		double abs_r = 0.d;//TODO
+		double abs_r = Math.sqrt(Math.pow(r1, 2) +Math.pow(r2, 2));//TODO
 		//TODO: normalize r
+		r1 = r1 / abs_r;
 		//TODO: normalize r
-		
+		r2 = r2 / abs_r;
 		//calculate the angle phi
-		double phi = 0.d;//TODO
+		double phi = Math.atan2(r2, r1);//TODO
 		
 		// return both translation and rotation in a RigidParameters object
 		return new RigidParameters(phi,new SimpleVector(t1,t2));
@@ -91,15 +92,15 @@ public class ExerciseREG {
 		for(int i = 0; i < numPoints; i++) {
 			
 			//real part of the problem (even rows)
-				//TODO
-				//TODO
-				//TODO
-				//TODO
+				m.setElementValue( 2*i, 0,  q.getElement(i, 0));
+				m.setElementValue( 2*i, 1, -q.getElement(i, 1));
+				m.setElementValue( 2*i, 2,  1.f);
+				m.setElementValue( 2*i, 3,  0.f);
 			//imaginary part of the problem (odd rows)
-				//TODO
-				//TODO
-				//TODO
-				//TODO
+				m.setElementValue( 2*i + 1, 0,  q.getElement(i, 1));
+				m.setElementValue( 2*i + 1, 1, q.getElement(i, 0));
+				m.setElementValue( 2*i + 1, 2,  0.f);
+				m.setElementValue( 2*i + 1, 3,  1.f);
 		}
 		
 		return m;
@@ -112,9 +113,11 @@ public class ExerciseREG {
 		SimpleVector b = new SimpleVector(2*numPoints);// right hand side
 		
 		for(int i = 0; i < numPoints; i++) {
-
+			
 			//TODO: real part of the problem
+			b.setElementValue(2 *i, p.getElement(i, 0));
 			//TODO: imaginary part of the problem
+			b.setElementValue(2 *i + 1, p.getElement(i, 1));
 		}
 		
 		return b;
@@ -136,7 +139,9 @@ public class ExerciseREG {
 		for(int i = 0; i < transformedPoints.getRows(); i++){
 			
 			//TODO: rotate (you can use SimpleOperators)
+			transformedPoints.setRowValue(i, SimpleOperators.multiply(r,points.getRow(i)));
 			//TODO: translate (you can use SimpleOperators)
+			transformedPoints.setRowValue(i,SimpleOperators.add(new SimpleVector[] {transformedPoints.getRow(i) , parameter.getTranslation()}));
 		}
 		
 		return transformedPoints;

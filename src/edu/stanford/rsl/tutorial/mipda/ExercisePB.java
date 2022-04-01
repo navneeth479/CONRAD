@@ -15,6 +15,7 @@ import edu.stanford.rsl.conrad.geometry.transforms.Translation;
 import edu.stanford.rsl.conrad.numerics.SimpleOperators;
 import edu.stanford.rsl.conrad.numerics.SimpleVector;
 import edu.stanford.rsl.tutorial.phantoms.SheppLogan;
+import edu.stanford.rsl.tutorial.phantoms.Ellipsoid;
 import ij.ImageJ;
 
 /**
@@ -30,17 +31,18 @@ public class ExercisePB {
 	public enum RampFilterType {NONE, RAMLAK, SHEPPLOGAN};
 	boolean filterShownOnce = false;
 	
-	RampFilterType filterType = RampFilterType.NONE; //TODO: Select one of the following values: NONE, RAMLAK, SHEPPLOGAN
+	RampFilterType filterType = RampFilterType.SHEPPLOGAN; //TODO: Select one of the following values: NONE, RAMLAK, SHEPPLOGAN
 	// (make this choice when you have finished the rest of the exercise)
 	
 	SheppLogan sheppLoganPhantom;
+	Ellipsoid ellipsoidPhantom;
 	
 	// parameters for the phantom
 	final int phantomSize = 256; // size of the phantom
 	final float world_unit = 1.0f; // pixel dimension
 	
 	// parameters for projection
-	final int projectionNumber = 180;// number of projection images
+	final int projectionNumber = 1000;// number of projection images
 	final double angularRange = Math.PI; // projection image range 		
 	final double angularStepLength = angularRange / projectionNumber; // angle in between adjacent projections
 	//
@@ -64,10 +66,10 @@ public class ExercisePB {
 
 	public static void main(String[] args) {
 		
-		//ImageJ ij = new ImageJ(); // optional TODO: uncomment if you want to analyze the output images
+		ImageJ ij = new ImageJ(); // optional TODO: uncomment if you want to analyze the output images
 		
 		ExercisePB parallel = new ExercisePB(); // Step 1: creates the Shepp-Logan phantom as example image
-		parallel.get_sheppLoganPhantom().show("Original Image (Shepp-Logan)");
+		parallel.get_dotsGrid().show("Original Phantom image");
 		
 		// Step 2: acquire forward projection images with a parallel projector
 		parallel.sinogram = parallel.parallelProjection();
@@ -124,7 +126,7 @@ public class ExercisePB {
 		if (!filterShownOnce)
 			ramp.show("Ramp Filter in Spatial Domain (rearranged for FFT-Shift)");
 		
-		// <your code> // TODO: Transform the filter into frequency domain (look for an appropriate method of Grid1DComplex)
+		ramp.transformForward(); // TODO: Transform the filter into frequency domain (look for an appropriate method of Grid1DComplex)
 		
 		if(!filterShownOnce) {
 			
@@ -132,16 +134,16 @@ public class ExercisePB {
 			filterShownOnce = true;
 		}
 
-		Grid1DComplex projectionF = null;// TODO: Transform the input sinogram signal ...
-		// <your code> // ... into the frequency domain (hint: similar to the last TODO)
+		Grid1DComplex projectionF = new Grid1DComplex(projection, true);// TODO: Transform the input sinogram signal ...
+		projectionF.transformForward();// ... into the frequency domain (hint: similar to the last TODO)
 		
 		if (projectionF != null) {
 			for(int p = 0; p < projectionF.getSize()[0]; p++){
-				// <your code> // TODO: Multiply the transformed sinogram with the ramp filter (complex multiplication) 
+				projectionF.multiplyAtIndex(p, ramp.getRealAtIndex(p), ramp.getImagAtIndex(p)); // TODO: Multiply the transformed sinogram with the ramp filter (complex multiplication) 
 			}	
 		}
 
-		// <your code> // TODO: transform back to get the filtered sinogram (i.e. invert the Fourier transform)
+		projectionF.transformInverse(); // TODO: transform back to get the filtered sinogram (i.e. invert the Fourier transform)
 				
 		// crop the image to its initial size
 		Grid1D grid = new Grid1D(projection);
@@ -159,11 +161,13 @@ public class ExercisePB {
 
 		final float constantFactor = -1.f / ((float) ( Math.PI * Math.PI * deltaS * deltaS));
 		
-		// <your code>  // TODO: set correct value in filterGrid for zero frequency
+		filterGrid.setAtIndex(0, (float)(1.f / (4 * deltaS * deltaS)));  // TODO: set correct value in filterGrid for zero frequency
 		
 		for (int i = 1; i < paddedSize/2; ++i) { // the "positive wing" of the filter 
 			
-			if (false) {// TODO: condition -> only odd indices are nonzero
+			if (i % 2 == 1) 
+			{// TODO: condition -> only odd indices are nonzero
+				filterGrid.setAtIndex(i, constantFactor / (i * i));
 				// <your code> // TODO: use setAtIndex and the constant "constantFactor"
 			}
 		}
@@ -173,7 +177,9 @@ public class ExercisePB {
 		for (int i = paddedSize / 2; i < paddedSize; ++i) { 
 			
 			final int tmp = paddedSize - i; // now we go back from N/2 to 1
-			if (false) {// TODO: condition -> only odd indices are nonzero
+			if (tmp % 2 == 1) {
+				// TODO: condition -> only odd indices are nonzero
+				filterGrid.setAtIndex(i, constantFactor / (tmp * tmp));
 				// <your code> // TODO: use setAtIndex and the constant "constantFactor"
 			}
 		}
@@ -184,10 +190,10 @@ public class ExercisePB {
 		
 		final float constantFactor = - 2.f / ((float) ( Math.PI * Math.PI * deltaS * deltaS));
 		
-		// <your code> // TODO: set correct value in filterGrid for zero frequency
+		filterGrid.setAtIndex(0, -constantFactor); // TODO: set correct value in filterGrid for zero frequency
 		
 		for (int i = 1; i < paddedSize/2; ++i){ // the "positive wing" of the filter
-			// <your code> // TODO: use setAtIndex and the constant "constantFactor"
+			filterGrid.setAtIndex(i, constantFactor * (float)(1 / (4.0f * i * i - 1.0)));// TODO: use setAtIndex and the constant "constantFactor"
 		}
 
 		// remark: the sorting of frequencies in the Fourier domain is 0,...,k,-k,...,1
@@ -195,7 +201,7 @@ public class ExercisePB {
 		for (int i = paddedSize / 2; i < paddedSize; ++i) {
 			
 			final float tmp = paddedSize - i; // now we go back from N/2 to 1
-			// <your code> // TODO: use setAtIndex and the constant "constantFactor"
+			filterGrid.setAtIndex(i, constantFactor * (float)(1 / (4.0f * tmp * tmp - 1.0)));// TODO: use setAtIndex and the constant "constantFactor"
 		}
 	}
 
@@ -401,7 +407,7 @@ public class ExercisePB {
 
 	public Grid2D parallelProjection(){
 		
-		Grid2D grid = projectRayDriven(sheppLoganPhantom, angularRange, angularStepLength, detectorLength, detectorSpacing);
+		Grid2D grid = projectRayDriven(ellipsoidPhantom, angularRange, angularStepLength, detectorLength, detectorSpacing);
 		return grid;
 	}
 	
@@ -437,6 +443,10 @@ public class ExercisePB {
 	}
 	public SheppLogan get_sheppLoganPhantom() {
 		return sheppLoganPhantom;
+	}
+	public Ellipsoid get_dotsGrid() {
+		ellipsoidPhantom = new Ellipsoid(256,256);
+	    return ellipsoidPhantom;
 	}
 	public int get_phantomSize() {
 		return phantomSize;
